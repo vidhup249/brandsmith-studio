@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/*
+ * MATAI design tokens.
+ * Near-black ink with a warm off-white foreground and three playful accents:
+ * coral (primary actions), violet (selection, focus) and lime (success, highlights).
+ */
+@theme {
+    --color-ink: #0c0b10;
+    --color-surface: #15131b;
+    --color-surface-2: #1d1a25;
+    --color-surface-3: #27232f;
+    --color-line: rgb(255 255 255 / 0.08);
+    --color-line-strong: rgb(255 255 255 / 0.16);
+
+    --color-fg: #f4f1ea;
+    --color-fg-muted: #a6a2b3;
+    --color-fg-faint: #6f6b7d;
+
+    --color-coral: #ff6a4d;
+    --color-coral-deep: #e8502f;
+    --color-violet: #9b7bff;
+    --color-lime: #d4f25a;
+    --color-pink: #ff8fcb;
+    --color-danger: #ff5d6c;
+
+    /* shadcn-style names used by the Magic UI components */
+    --color-background: var(--color-surface);
+    --color-foreground: var(--color-fg);
+    --color-border: var(--color-line);
+    --color-primary: var(--color-coral);
+    --color-primary-foreground: #1a0b07;
+
+    --font-display: "Bricolage Grotesque", "Geist", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+
+    --radius-card: 1.75rem;
+
+    --shadow-float: 0 24px 60px -20px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.06);
+    --shadow-glow-coral: 0 10px 40px -8px rgb(255 106 77 / 0.55);
+    --shadow-glow-violet: 0 10px 40px -8px rgb(155 123 255 / 0.5);
+
+    /* Magic UI animations */
+    --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
+    --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+    --animate-shine: shine var(--duration) infinite linear;
+    --animate-shiny-text: shiny-text 8s infinite;
+    --animate-float: float 6s ease-in-out infinite;
+    --animate-shimmer: shimmer 1.8s linear infinite;
+
+    @keyframes shimmer-slide {
+        to { transform: translate(calc(100cqw - 100%), 0); }
+    }
+    @keyframes spin-around {
+        0% { transform: translateZ(0) rotate(0); }
+        15%, 35% { transform: translateZ(0) rotate(90deg); }
+        65%, 85% { transform: translateZ(0) rotate(270deg); }
+        100% { transform: translateZ(0) rotate(360deg); }
+    }
+    @keyframes shine {
+        0% { background-position: 0% 0%; }
+        50% { background-position: 100% 100%; }
+        to { background-position: 0% 0%; }
+    }
+    @keyframes shiny-text {
+        0%, 90%, 100% { background-position: calc(-100% - var(--shiny-width)) 0; }
+        30%, 60% { background-position: calc(100% + var(--shiny-width)) 0; }
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(var(--float-rotate, 0deg)); }
+        50% { transform: translateY(-8px) rotate(var(--float-rotate, 0deg)); }
+    }
+    @keyframes shimmer {
+        from { background-position: -200% 0; }
+        to { background-position: 200% 0; }
+    }
+}
+
+@layer base {
+    html, body, #root {
+        height: 100%;
+    }
+
+    body {
+        @apply bg-ink text-fg font-sans antialiased;
+        font-feature-settings: "ss01", "cv11";
+        overflow: hidden;
+    }
+
+    ::selection {
+        background: var(--color-violet);
+        color: var(--color-ink);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-violet);
+        outline-offset: 2px;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+        background: rgb(255 255 255 / 0.08);
+        border-radius: 9999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { background-color: rgb(255 255 255 / 0.16); }
+
+    input[type="range"] { accent-color: var(--color-violet); }
+}
+
+@layer components {
+    /* Frosted surface used by panels, popovers and the prompt dock */
+    .glass {
+        background: color-mix(in oklab, var(--color-surface) 78%, transparent);
+        backdrop-filter: blur(22px) saturate(140%);
+        -webkit-backdrop-filter: blur(22px) saturate(140%);
+        border: 1px solid var(--color-line);
+    }
+
+    /* Small uppercase label */
+    .eyebrow {
+        @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-fg-faint;
+    }
+
+    /* Loading placeholder sweep */
+    .skeleton-sweep {
+        background: linear-gradient(100deg,
+            rgb(255 255 255 / 0.03) 30%,
+            rgb(255 255 255 / 0.09) 50%,
+            rgb(255 255 255 / 0.03) 70%);
+        background-size: 200% 100%;
+        @apply animate-shimmer;
+    }
+}
+
+@utility no-scrollbar {
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+}

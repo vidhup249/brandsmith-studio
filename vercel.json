@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm install",
+  "buildCommand": "npx vite build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/.netlify/functions/:path*", "destination": "https://higgsfield-matu.netlify.app/.netlify/functions/:path*" },
+    { "source": "/download-media", "destination": "https://higgsfield-matu.netlify.app/download-media" }
+  ],
+  "headers": [
+    { "source": "/(.*)", "headers": [{ "key": "X-Frame-Options", "value": "DENY" }] }
+  ]
+}

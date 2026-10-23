@@ -2,6 +2,7 @@ import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById } fro
 import * as cf from './api.js';
 
 const KIE_BASE = 'https://api.kie.ai';
+const KIE_UPLOAD_BASE = 'https://kieai.redpandaai.co';
 
 // When the content-factory backend session is active (cf marker in
 // localStorage), generation goes through the /api function bridge instead.
@@ -144,6 +145,13 @@ export class KieClient {
     _extractUrl(data) {
         if (Array.isArray(data.resultUrls) && data.resultUrls.length) return data.resultUrls[0];
         if (data.response?.resultUrls?.length) return data.response.resultUrls[0];
+        // jobs/recordInfo returns the result as a JSON string
+        if (typeof data.resultJson === 'string') {
+            try {
+                const parsed = JSON.parse(data.resultJson);
+                if (parsed.resultUrls?.length) return parsed.resultUrls[0];
+            } catch { /* not JSON */ }
+        }
         return null;
     }
 
@@ -151,7 +159,7 @@ export class KieClient {
         const modelInfo = getModelById(id) || { id, endpoint: id };
         if (id.includes('nano-banana-pro')) return { ...modelInfo, slug: 'nano-banana-pro' };
         if (id.includes('nano-banana-2')) return { ...modelInfo, slug: 'nano-banana-2' };
-        if (id.includes('nano-banana')) return { ...modelInfo, slug: 'nano-banana' };
+        if (id.includes('nano-banana')) return { ...modelInfo, slug: 'google/nano-banana' };
         if (id.includes('grok')) return { ...modelInfo, slug: 'grok-imagine/text-to-image' };
         return { ...modelInfo, slug: 'nano-banana-2' };
     }
@@ -162,14 +170,16 @@ export class KieClient {
         if (id.includes('gpt')) return { ...modelInfo, slug: 'gpt-image-2-image-to-image', mode: 'input_urls' };
         if (id.includes('nano-banana-pro')) return { ...modelInfo, slug: 'nano-banana-pro', mode: 'image_input' };
         if (id.includes('nano-banana-2')) return { ...modelInfo, slug: 'nano-banana-2', mode: 'image_input' };
-        if (id.includes('nano-banana')) return { ...modelInfo, slug: 'nano-banana-edit', mode: 'image_input' };
-        return { ...modelInfo, slug: 'nano-banana-edit', mode: 'image_input' };
+        if (id.includes('nano-banana')) return { ...modelInfo, slug: 'google/nano-banana-edit', mode: 'image_urls' };
+        return { ...modelInfo, slug: 'google/nano-banana-edit', mode: 'image_urls' };
     }
 
     _imageInput(params, settings) {
-        const input = { output_format: 'jpg' };
+        // google/nano-banana(-edit) takes png|jpeg and image_size instead of aspect_ratio
+        const isGoogle = settings.slug?.startsWith('google/');
+        const input = { output_format: isGoogle ? 'png' : 'jpg' };
         if (params.prompt) input.prompt = params.prompt;
-        if (params.aspect_ratio) input.aspect_ratio = params.aspect_ratio;
+        if (params.aspect_ratio) input[isGoogle ? 'image_size' : 'aspect_ratio'] = params.aspect_ratio;
         if (params.resolution) input.resolution = String(params.resolution).toUpperCase().replace('K', 'K');
         if (typeof params.seed === 'number' && params.seed !== -1) input.seed = params.seed;
 
@@ -177,6 +187,7 @@ export class KieClient {
         if (images) {
             if (settings.mode === 'single') input.image_url = images[0];
             else if (settings.mode === 'input_urls') input.input_urls = images;
+            else if (settings.mode === 'image_urls') input.image_urls = images;
             else input.image_input = images;
         }
         return input;
@@ -241,7 +252,7 @@ export class KieClient {
         const bridge = cfPath();
         if (bridge) return bridge.generateImage(params);
         const modelInfo = this._imageModel(params.model);
-        const settings = { mode: params.image_url ? 'image_input' : null };
+        const settings = { slug: modelInfo.slug, mode: params.image_url ? 'image_input' : null };
         const input = this._imageInput(params, settings);
 
         const result = await this._submitTask(modelInfo.slug, input, { onRequestId: params.onRequestId });
@@ -389,7 +400,8 @@ export class KieClient {
         const bridge = cfPath();
         if (bridge) return bridge.uploadFile(file);
         const key = this.getKey();
-        const url = `${this.baseUrl}/api/v1/file-stream-upload`;
+        // Uploads live on a separate host (dev goes through the vite '/kie-upload' proxy)
+        const url = `${import.meta.env.DEV ? '/kie-upload' : KIE_UPLOAD_BASE}/api/file-stream-upload`;
 
         const formData = new FormData();
         formData.append('file', file);
