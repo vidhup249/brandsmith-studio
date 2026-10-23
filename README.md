@@ -345,3 +345,4 @@ Built with [Muapi.ai](https://muapi.ai) — the unified API for AI image and vid
 
 ---
 *Looking for a free Higgsfield AI alternative? Open Higgsfield AI is an open-source AI image and video generation studio and Higgsfield AI replacement that you can self-host, customize, and extend.*
+"# brandsmith-qd-je" 
